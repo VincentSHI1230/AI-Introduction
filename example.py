@@ -1,14 +1,14 @@
 import eightpuzzle as ep
 
 
-BEGIN = ep.box([2, 8, 3, 1, 6, 4, 7, 0, 5])
-END = ep.box([1, 2, 3, 8, 0, 4, 7, 6, 5])
+BEGIN = ep.Box([2, 8, 3, 1, 6, 4, 7, 0, 5])
+END = ep.Box([1, 2, 3, 8, 0, 4, 7, 6, 5])
 front = [BEGIN]
 
 
-def key(box: 'ep.box') -> int:
+def key(box: 'ep.Box') -> int:
     # 广度优先搜索
-    # return len(box.history)
+    # return len(Box.history)
     # 启发式搜索
     fr = box.value
     to = END.value
