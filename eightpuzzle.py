@@ -2,9 +2,10 @@
 通过Python面向对象实现八数码问题求解
 --------------------------------------------
 date: 2022-10-17
-author: 史文朔 | Vincent SHI
+author: Vincent SHI | 史文朔
 --------------------------------------------
 """
+from typing import *
 import warnings
 
 
@@ -18,7 +19,7 @@ class Box:
     << 实例化新的九宫格对象 | new Box object
     """
 
-    def __init__(self, value: list, history: str = '-> ') -> None:
+    def __init__(self, value: List[int], history: str = '') -> None:
         if len(value) != 9 or set(value) != {0, 1, 2, 3, 4, 5, 6, 7, 8}:
             raise ValueError(
                 '输入值必须是由 0-8 组成的 9 位整数列表 | value must be a list of 9 int in 0-8')
@@ -27,28 +28,29 @@ class Box:
         elif history[:2] == '->':
             history = history[2:]
         if set(history) - {'U', 'D', 'L', 'R'}:
-            raise ValueError("历史记录只能含有 'U', 'D', 'L' 和 'R' | history can only contain 'U', 'D', 'L' and 'R'")
+            raise ValueError(
+                "历史记录只能含有 'U', 'D', 'L' 和 'R' | history can only contain 'U', 'D', 'L' and 'R'")
         self._value = value
-        self._history = '-> ' + history
+        self._history = history
         self._zero = self._value.index(0)
 
-    def __str__(self):
+    def __repr__(self):
         """九宫格对象的格式化输出 | formatted output of Box object"""
-        return 'moved via {}:\n[ {} {} {}\n  {} {} {}\n  {} {} {} ]\n'.format(
+        return 'moved via -> {}:\n[ {} {} {}\n  {} {} {}\n  {} {} {} ]\n'.format(
             self._history, *[i if i != 0 else '*' for i in self._value])
 
     @property
-    def value(self) -> list:
+    def value(self) -> List[int]:
         """
-        'Box'.value -> list
+        'Box'.value -> list[int]
 
         九宫格对象的值 | value of Box object
         """
         return self._value
 
-    def set_value(self, value: list) -> None:
+    def set_value(self, value: List[int]) -> None:
         """
-        'Box'.set_value(value: list) -> None
+        'Box'.set_value(value: list[int]) -> None
 
         修改当前九宫格对象的值而不改变其历史记录 | change value of Box object without change history
         >> value: 新的值 | new value
@@ -59,7 +61,8 @@ class Box:
         self._value = value
         self._zero = self._value.index(0)
         # 警告: set_value 方法不会改变历史记录 | Warning: set_value method will not change history
-        warnings.warn('set_value 方法不会改变历史记录 | set_value method will not change history', SyntaxWarning)
+        warnings.warn(
+            'set_value 方法不会改变历史记录 | set_value method will not change history', SyntaxWarning)
 
     @property
     def history(self) -> str:
@@ -78,11 +81,13 @@ class Box:
         >> history: 新的历史记录 | new history
         """
         if set(history) - {'U', 'D', 'L', 'R'}:
-            raise ValueError("历史记录只能含有 'U', 'D', 'L' 和 'R' | history can only contain 'U', 'D', 'L' and 'R'")
+            raise ValueError(
+                "历史记录只能含有 'U', 'D', 'L' 和 'R' | history can only contain 'U', 'D', 'L' and 'R'")
         self._history += history
         # 警告: add_history 方法不会改变九宫格对象的值 | Warning: add_history method will not change value of Box object
         warnings.warn(
-            'add_history 方法不会改变九宫格对象的值 | add_history method will not change value of Box object', SyntaxWarning)
+            'add_history 方法不会改变九宫格对象的值 | add_history method will not change value of Box object',
+            SyntaxWarning)
 
     def del_history(self, length: int = 1) -> str:
         """
@@ -94,21 +99,45 @@ class Box:
         """
         if length < 1:
             raise ValueError('length 必须大于 0 | length must be greater than 0')
-        if length > len(self._history) - 3:
-            raise ValueError('length 不能大于历史记录长度 | length cannot be greater than length of history')
+        if length > len(self._history):
+            raise ValueError(
+                'length 不能大于历史记录长度 | length cannot be greater than length of history')
         deleted_history = self._history[-length:]
         self._history = self._history[:-length]
         # 警告: del_history 方法不会改变九宫格对象的值 | Warning: del_history method will not change value of Box object
         warnings.warn(
-            'del_history 方法不会改变九宫格对象的值 | del_history method will not change value of Box object', SyntaxWarning)
+            'del_history 方法不会改变九宫格对象的值 | del_history method will not change value of Box object',
+            SyntaxWarning)
         return deleted_history
 
-    def up(self) -> 'Box':
+    def copy(self) -> 'Box':
         """
-        'Box'.up() -> 'Box'
+        'Box'.copy() -> 'Box'
 
-        向上移牌 | move up
-        << 返回新的九宫格对象 | return new Box object
+        复制当前的九宫格对象 | copy Box object
+        << 返回复制的九宫格对象 | return copied Box object
+        """
+        return Box(self._value.copy(), self._history)
+
+    def up(self) -> None:
+        """
+        'Box'.up() -> None
+
+        在当前的九宫格对象内向上移牌 | move up in current Box object
+        """
+        if self._zero in (6, 7, 8):
+            raise ValueError('不能向上移牌 | cannot move up')
+        self._value[self._zero], self._value[self._zero +
+                                             3] = self._value[self._zero + 3], self._value[self._zero]
+        self._zero += 3
+        self._history += 'U'
+
+    @property
+    def upped(self) -> 'Box':
+        """
+        'Box'.upped -> 'Box'
+
+        返回向上移牌后的九宫格对象 | return Box object after move up
         """
         if self._zero in (6, 7, 8):
             raise ValueError('不能向上移牌 | cannot move up')
@@ -117,12 +146,25 @@ class Box:
                                  3] = value[self._zero + 3], value[self._zero]
         return Box(value, self._history + 'U')
 
-    def down(self) -> 'Box':
+    def down(self) -> None:
         """
-        'Box'.down() -> 'Box'
+        'Box'.down() -> None
 
-        向下移牌 | move down
-        << 返回新的九宫格对象 | return new Box object
+        在当前的九宫格对象内向下移牌 | move down in current Box object
+        """
+        if self._zero in (0, 1, 2):
+            raise ValueError('不能向下移牌 | cannot move down')
+        self._value[self._zero], self._value[self._zero -
+                                             3] = self._value[self._zero - 3], self._value[self._zero]
+        self._zero -= 3
+        self._history += 'D'
+
+    @property
+    def downed(self) -> 'Box':
+        """
+        'Box'.downed -> 'Box'
+
+        返回向下移牌后的九宫格对象 | return Box object after move down
         """
         if self._zero in (0, 1, 2):
             raise ValueError('不能向下移牌 | cannot move down')
@@ -131,12 +173,25 @@ class Box:
                                  3] = value[self._zero - 3], value[self._zero]
         return Box(value, self._history + 'D')
 
-    def left(self) -> 'Box':
+    def left(self) -> None:
         """
-        'Box'.left() -> 'Box'
+        'Box'.left() -> None
 
-        向左移牌 | move left
-        << 返回新的九宫格对象 | return new Box object
+        在当前的九宫格对象内向左移牌 | move left in current Box object
+        """
+        if self._zero in (2, 5, 8):
+            raise ValueError('不能向左移牌 | cannot move left')
+        self._value[self._zero], self._value[self._zero +
+                                             1] = self._value[self._zero + 1], self._value[self._zero]
+        self._zero += 1
+        self._history += 'L'
+
+    @property
+    def lefter(self) -> 'Box':
+        """
+        'Box'.lefter -> 'Box'
+
+        返回向左移牌后的九宫格对象 | return Box object after move left
         """
         if self._zero in (2, 5, 8):
             raise ValueError('不能向左移牌 | cannot move left')
@@ -145,12 +200,25 @@ class Box:
                                  1] = value[self._zero + 1], value[self._zero]
         return Box(value, self._history + 'L')
 
-    def right(self) -> 'Box':
+    def right(self) -> None:
         """
-        'Box'.right() -> 'Box'
+        'Box'.right() -> None
 
-        向右移牌 | move right
-        << 返回新的九宫格对象 | return new Box object
+        在当前的九宫格对象内向右移牌 | move right in current Box object
+        """
+        if self._zero in (0, 3, 6):
+            raise ValueError('不能向右移牌 | cannot move right')
+        self._value[self._zero], self._value[self._zero -
+                                             1] = self._value[self._zero - 1], self._value[self._zero]
+        self._zero -= 1
+        self._history += 'R'
+
+    @property
+    def righter(self) -> 'Box':
+        """
+        'Box'.righter -> 'Box'
+
+        返回向右移牌后的九宫格对象 | return Box object after move right
         """
         if self._zero in (0, 3, 6):
             raise ValueError('不能向右移牌 | cannot move right')
@@ -160,32 +228,41 @@ class Box:
         return Box(value, self._history + 'R')
 
     @property
-    def able(self) -> list[callable]:
+    def able(self) -> Set[str]:
         """
-        'Box'.able -> list[callable]
+        'Box'.able -> Set[str]
 
-        查询可用的移动方法 | query usable move method
-        << 返回可用的移动方法列表 | return list of usable move method
+        查询可用的移动方向 | query available move direction
+        << 返回可用的移动方向 | return usable move direction
         """
-        able = []
+        able = set()
         if self._zero not in (6, 7, 8):
-            able.append(self.up)
+            able.add('U')
         if self._zero not in (0, 1, 2):
-            able.append(self.down)
+            able.add('D')
         if self._zero not in (2, 5, 8):
-            able.append(self.left)
+            able.add('L')
         if self._zero not in (0, 3, 6):
-            able.append(self.right)
+            able.add('R')
         return able
 
-    def expand(self) -> list['Box']:
+    def expand(self) -> List['Box']:
         """
-        'Box'.expand() -> list['Box']
+        'Box'.expand() -> List['Box']
 
         拓展下一层 | expand next layer
         << 返回新的九宫格对象列表 | return list of new Box object
         """
-        return [i() for i in self.able]
+        new = []
+        if self._zero not in (6, 7, 8):
+            new.append(self.upped)
+        if self._zero not in (0, 1, 2):
+            new.append(self.downed)
+        if self._zero not in (2, 5, 8):
+            new.append(self.lefter)
+        if self._zero not in (0, 3, 6):
+            new.append(self.righter)
+        return new
 
 
 def input_box(prompt: str = False) -> 'Box':
@@ -232,14 +309,191 @@ def input_box(prompt: str = False) -> 'Box':
     return Box(value)
 
 
-if __name__ == '__main__':
-    a = input_box()
-    a = a.up().up()
-    print(a)
-    print(a.del_history())
-    b = input_box()
-    b.add_history('UDLR')
-    print(b.del_history(2))
+def search(start: 'Box', end: 'Box', fn: Callable[[Dict[str, any]], int]) -> None:
+    """
+    search(start: 'Box', end: 'Box', fn: Callable[[Dict[str, any]], int]) -> None
 
-if __name__ == 'eight-puzzle':
-    pass
+    通用启发式搜索函数 | universal heuristic search function
+    >> start: 起始九宫格对象 | start Box object
+    >> end: 目标九宫格对象 | end Box object
+    >> fn: 评价函数 | evaluation function | fn(task: dict) -> int 
+    >> >> task: 评价任务信息 | evaluation task information
+    >> >> - task['start']: 求解的起始值 | start value
+    >> >> - task['end']: 求解的目标值 | end value
+    >> >> - task['now']: 需评价的当前节点的值 | current node value to be evaluated
+    >> >> - task['history']: 当前节点的历史记录 | current node history
+    >> << 返回评价值 | return evaluation value
+    """
+    goal = end.value
+    print('->', start.history)
+    if start.value == goal:
+        print('起点已在目标状态 | start Box is already in target state')
+        print(start)
+        return
+
+    def _key(now: 'Box') -> int:
+        task = {
+            'start': start.value,
+            'end': goal,
+            'now': now.value,
+            'history': now.history
+        }
+        return fn(task)
+
+    front = [start]
+    while front:
+        front.sort(key=_key)
+        for check in front.pop(0).expand():
+            print('->', check.history)
+            if check.value == goal:
+                print(check)
+                return
+            front.append(check)
+
+
+def breadth_first_search(start: 'Box', end: 'Box') -> None:
+    """
+    breadth_first_search(start: 'Box', end: 'Box') -> None
+
+    宽度优先搜索 | breadth first search
+    >> start: 起始九宫格对象 | start Box object
+    >> end: 目标九宫格对象 | end Box object
+    """
+    goal = end.value
+    print('->', start.history)
+    if start.value == goal:
+        print('起点已在目标状态 | start Box is already in target state')
+        print(start)
+        return
+
+    def _bfs(layer: List['Box']) -> None:
+        next_layer = []
+        for now in layer:
+            for check in now.expand():
+                print('->', check.history)
+                if check.value == goal:
+                    print(check)
+                    return
+                next_layer.append(check)
+        _bfs(next_layer)
+
+    _bfs([start])
+
+
+def depth_first_search(start: 'Box', end: 'Box') -> None:
+    """
+    depth_first_search(start: 'Box', end: 'Box') -> None
+
+    深度优先搜索 (不可用于求解) | depth first search (cannot be used for search)
+    >> start: 起始九宫格对象 | start Box object
+    >> end: 目标九宫格对象 | end Box object
+    """
+    # 警告: 典型的深度优先搜索是不完备的搜索算法, 在八数码问题中具有严重缺陷, 本函数仅供展示，不可用于求解.
+    # Warning: The typical depth-first search is an incomplete search algorithm, which has serious defects here.
+    # This function is only for demonstration and cannot be used for search.
+    warnings.warn('深度优先搜索是不完备的搜索算法, 在八数码问题中具有严重缺陷, 本函数仅供展示，不可用于求解.\n'
+                  'The typical depth-first search is an incomplete search algorithm, which has serious defects here.\n'
+                  'This function is only for demonstration and cannot be used for search.', SyntaxWarning)
+    if input('\n是否仍要继续? (y/n) | continue? (y/n): ') not in ('y', 'Y', 'yes', 'Yes', 'YES', '是', '是的', '', ' '):
+        return
+    goal = end.value
+    print('->', start.history)
+    if start.value == goal:
+        print('起点已在目标状态 | start Box is already in target state')
+        print(start)
+        return
+
+    def _dfs(now: 'Box') -> None:
+        for next_layer in now.expand():
+            print('->', next_layer.history)
+            if next_layer.value == goal:
+                print(next_layer)
+                return
+            _dfs(next_layer)
+
+    _dfs(start)
+
+
+def depth_limited_search(start: 'Box', end: 'Box', limit: int) -> None:
+    """
+    depth_limited_search(start: 'Box', end: 'Box', limit: int) -> None
+
+    有限深度优先搜索 | depth limited search
+    >> start: 起始九宫格对象 | start Box object
+    >> end: 目标九宫格对象 | end Box object
+    >> limit: 搜索深度限制 | search depth limit
+    """
+    # 警告: 有限深度优先搜索是不完备的搜索算法 | Warning: depth limited search is an incomplete search algorithm
+    warnings.warn(
+        '有限深度优先搜索是不完备的搜索算法 | depth limited search is an incomplete search algorithm', SyntaxWarning)
+    if limit < 0:
+        raise ValueError('深度限制不能小于 0 | depth limit cannot be less than 0')
+    goal = end.value
+    print('->', start.history)
+    if start.value == goal:
+        print('起点已在目标状态 | start Box is already in target state')
+        print(start)
+        return
+
+    def _dls(now: 'Box', depth: int) -> bool:
+        if depth == limit:
+            return False
+        for next_layer in now.expand():
+            print('->', next_layer.history)
+            if next_layer.value == goal:
+                print(next_layer)
+                return True
+            if _dls(next_layer, depth + 1):
+                return True
+        return False
+
+    if not _dls(start, 0):
+        print('未能在限定深度内找到解 | cannot find solution within the depth limit')
+
+
+def double_breadth_first_search(start: 'Box', end: 'Box') -> None:
+    """
+    double_breadth_first_search(start: 'Box', end: 'Box') -> None
+
+    双向宽度优先搜索 | double breadth first search
+    >> start: 起始九宫格对象 | start Box object
+    >> end: 目标九宫格对象 | end Box object
+    """
+    goal = end.value
+    print('start ->', start.history)
+    if start.value == goal:
+        print('起点已在目标状态 | start Box is already in target state')
+        print(start)
+        return
+
+    def _dbfs(push: List['Box'], wait: List['Box'], forward: bool) -> None:
+        next_layer = []
+        for now in push:
+            for check in now.expand():
+                print('forward' if forward else 'reverse', '->', check.history)
+                for box in wait:
+                    if check.value == box.value:
+                        if not forward:
+                            check, box = box, check
+                        print('forward', check)
+                        print('reverse', box)
+                        reverse_replace = {
+                            'U': 'D', 'D': 'U', 'L': 'R', 'R': 'L'}
+                        reverse_history = ''.join(
+                            [reverse_replace[i] for i in box.history[::-1]])
+                        print('totally', Box(
+                            goal, check.history + reverse_history))
+                        return
+                next_layer.append(check)
+        _dbfs(wait, next_layer, not forward)
+
+    _dbfs([start], [end], True)
+
+
+bfs = breadth_first_search
+dfs = depth_first_search
+dls = depth_limited_search
+dbfs = double_breadth_first_search
+
+if __name__ == '__main__':
+    print(__doc__)
