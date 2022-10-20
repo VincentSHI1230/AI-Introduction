@@ -5,6 +5,8 @@ date: 2022-10-17
 author: Vincent SHI | 史文朔
 --------------------------------------------
 """
+from functools import wraps
+from time import time
 from typing import *
 import warnings
 
@@ -316,13 +318,13 @@ def search(start: 'Box', end: 'Box', fn: Callable[[Dict[str, any]], int]) -> Non
     通用启发式搜索函数 | universal heuristic search function
     >> start: 起始九宫格对象 | start Box object
     >> end: 目标九宫格对象 | end Box object
-    >> fn: 评价函数 | evaluation function | fn(task: dict) -> int 
-    >> >> task: 评价任务信息 | evaluation task information
+    >> fn: 启发函数 | evaluation function | fn(task: dict) -> int
+    >> >> task: 用于完成评估的基本信息 | basic information for evaluation
     >> >> - task['start']: 求解的起始值 | start value
     >> >> - task['end']: 求解的目标值 | end value
     >> >> - task['now']: 需评价的当前节点的值 | current node value to be evaluated
     >> >> - task['history']: 当前节点的历史记录 | current node history
-    >> << 返回评价值 | return evaluation value
+    >> << 评估得出的搜索代价 | evaluation result of search cost
     """
     goal = end.value
     print('->', start.history)
@@ -490,10 +492,103 @@ def double_breadth_first_search(start: 'Box', end: 'Box') -> None:
     _dbfs([start], [end], True)
 
 
+def lowest_step(task: dict) -> int:
+    """
+    lowest_step(task: dict) -> int
+
+    为 search() 函数构建的估价函数 (fn): 最小步数 | heuristic function (fn) for search(): lowest step
+    采用历史记录的长度作为评价标准, 单独使用时类似于广度优先搜索.
+    using the length of the history record as the estimation criterion,
+    it works like breadth first search when used independently.
+    >> task: 用于完成评估的基本信息 | basic information for evaluation
+    << 评估得出的搜索代价 | evaluation result of search cost
+    """
+    return len(task['history'].split())
+
+
+def most_at_place(task: dict) -> int:
+    """
+    most_at_place(task: dict) -> int
+
+    为 search() 函数构建的估价函数 (fn): 最多在位 | heuristic function (fn) for search(): most at place
+    采用当前状态与目标状态的相同元素个数作为评价标准.
+    using the number of identical elements in the current state and the target state as the evaluation criterion.
+    >> task: 用于完成评估的基本信息 | basic information for evaluation
+    << 评估得出的搜索代价 | evaluation result of search cost
+    """
+    s = 0
+    for i in range(9):
+        if task['value'][i] == task['goal'][i]:
+            s += 1
+    return s
+
+
+def manhattan_distance(task: dict) -> int:
+    """
+    manhattan_distance(task: dict) -> int
+
+    为 search() 函数构建的估价函数 (fn): 曼哈顿距离 | heuristic function (fn) for search(): manhattan distance
+    采用当前状态与目标状态的曼哈顿距离作为评价标准.
+    using the manhattan distance between the current state and the target state as the evaluation criterion.
+    >> task: 用于完成评估的基本信息 | basic information for evaluation
+    << 评估得出的搜索代价 | evaluation result of search cost
+    """
+    s = 0
+    for i in range(9):
+        now, goal = task['value'].index(i), task['goal'].index(i)
+        s += abs(now // 3 - goal // 3) + abs(now % 3 - goal % 3)
+    return s
+
+
+def run_time(func: Callable) -> Callable:
+    """
+    @run_time
+
+    用于计算函数运行时间的装饰器 | decorator for calculating function running time
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time()
+        result = func(*args, **kwargs)
+        print('运行时间 | run time: {:.2f}s'.format(time() - start))
+        return result
+    return wrapper
+
+
+def run_time_5(func: Callable) -> Callable:
+    """
+    @run_time_5
+
+    重复运行 5 次并计算平均运行时间的装饰器 | decorator for repeating 5 times and calculating average running time
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        times = []
+        for _ in range(1, 5):
+            start = time()
+            func(*args, **kwargs)
+            times.append(time() - start)
+        start = time()
+        result = func(*args, **kwargs)
+        times.append(time() - start)
+        print('-----------------------')
+        for i in range(1, 6):
+            print('  {}  |  {:.2f}s'.format(i, times[i - 1]))
+        print('-----------------------')
+        print('平均时间 | average time: {:.2f}s'.format(sum(times) / 5))
+        return result
+    return wrapper
+
+
 bfs = breadth_first_search
 dfs = depth_first_search
 dls = depth_limited_search
 dbfs = double_breadth_first_search
+ls = lowest_step
+mp = most_at_place
+md = manhattan_distance
+rt = run_time
+rt5 = run_time_5
 
 if __name__ == '__main__':
     print(__doc__)
