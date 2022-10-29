@@ -2,32 +2,32 @@ from typing import *
 
 neighbor_map = {
     'Arad': ['Zerind', 'Sibiu', 'Timisoara'],
-    'Mchadia': ['Drobeta', 'Lugoj'],
     'Bucharest': ['Fagaras', 'Pitesti', 'Giurgiu', 'Urziceni'],
-    'Neamt': ['Iasi'],
-    'Craiova': ['Drobeta', 'RimnicuVilcea', 'Pitesti'],
-    'Oradea': ['Zerind', 'Sibiu'],
-    'Drobeta': ['Mchadia', 'Craiova'],
-    'Pitesti': ['RimnicuVilcea', 'Craiova', 'Bucharest'],
+    'Craiova': ['Drobeta', 'Rimnicu Vilcea', 'Pitesti'],
+    'Drobeta': ['Mehadia', 'Craiova'],
     'Eforie': ['Hirsova'],
-    'RimnicuVilcea': ['Sibiu', 'Pitesti', 'Craiova'],
     'Fagaras': ['Sibiu', 'Bucharest'],
-    'Sibiu': ['Oradea', 'Arad', 'RimnicuVilcea', 'Fagaras'],
     'Giurgiu': ['Bucharest'],
-    'Timisoara': ['Arad', 'Lugoj'],
     'Hirsova': ['Eforie', 'Urziceni'],
-    'Urziceni': ['Bucharest', 'Hirsova', 'Vaslui'],
-    'Tasi': ['Lugoj', 'Mehadia'],
-    'Vaslui': ['Urziceni', 'Iasi'],
+    'Iasi': ['Neamt', 'Vaslui'],
     'Lugoj': ['Timisoara', 'Mehadia'],
+    'Mehadia': ['Drobeta', 'Lugoj'],
+    'Neamt': ['Iasi'],
+    'Oradea': ['Zerind', 'Sibiu'],
+    'Pitesti': ['Rimnicu Vilcea', 'Craiova', 'Bucharest'],
+    'Rimnicu Vilcea': ['Sibiu', 'Pitesti', 'Craiova'],
+    'Sibiu': ['Oradea', 'Arad', 'Rimnicu Vilcea', 'Fagaras'],
+    'Timisoara': ['Arad', 'Lugoj'],
+    'Urziceni': ['Bucharest', 'Hirsova', 'Vaslui'],
+    'Vaslui': ['Urziceni', 'Iasi'],
     'Zerind': ['Arad', 'Oradea']
 }
 
 
 class Node:
-    def __init__(self, name: str, history: List[str] = []):
+    def __init__(self, name: str, history: List[str] = ...):
         self.name = name
-        self.history = history
+        self.history = history if history is not ... else []
 
     def expand(self) -> List['Node']:
         return [Node(i, self.history + [self.name]) for i in neighbor_map[self.name]]
@@ -37,12 +37,15 @@ def bfs(start: 'Node', goal: 'Node'):
     queue = [start]
     while queue:
         node = queue.pop(0)
+        print(*node.history, node.name, sep=' -> ')
         if node.name == goal.name:
-            return node.history + [node.name]
+            print('求解完成。')
+            break
         queue.extend(node.expand())
-    raise Exception('无解')
+    else:
+        print('求解失败。')
 
 
 a = Node(input('请输入起点城市名: '))   # Arad
 b = Node(input('请输入目标城市名: '))   # Bucharest
-print(bfs(a, b))
+bfs(a, b)

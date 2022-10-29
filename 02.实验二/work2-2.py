@@ -33,13 +33,17 @@ straight_to_Bucharest = {
 
 
 class Node:
-    def __init__(self, name: str, history: List[str] = [], cost: int = 0):
+    def __init__(self, name: str, history: List[str] = ..., cost: int = 0):
         self.name = name
-        self.history = history
+        self.history = history if history is not ... else []
         self.cost = cost
 
     def expand(self) -> List['Node']:
-        return [Node(i, self.history + [self.name], self.cost + neighbormapWithweight[self.name][i]) for i in neighbormapWithweight[self.name]]
+        return [Node(
+            i,
+            self.history + [self.name],
+            self.cost + neighbormapWithweight[self.name][i]
+        ) for i in neighbormapWithweight[self.name]]
 
 
 def astar(start: 'Node', goal: 'Node'):

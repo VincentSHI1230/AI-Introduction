@@ -1,14 +1,16 @@
 """
-通过Python面向对象实现八数码问题求解
+-** eightpuzzle **-
 --------------------------------------------
-date: 2022-10-17
+crate_date: 2022-10-16
+update_date: 2022-10-20
 author: Vincent SHI | 史文朔
+blog: https://blog.vincent1230.top/
 --------------------------------------------
 """
-from functools import wraps
-from time import time
-from typing import *
 import warnings
+from functools import wraps
+from time import clock
+from typing import *
 
 
 class Box:
@@ -503,7 +505,7 @@ def lowest_step(task: dict) -> int:
     >> task: 用于完成评估的基本信息 | basic information for evaluation
     << 评估得出的搜索代价 | evaluation result of search cost
     """
-    return len(task['history'].split())
+    return len(task['history'])
 
 
 def most_at_place(task: dict) -> int:
@@ -516,10 +518,10 @@ def most_at_place(task: dict) -> int:
     >> task: 用于完成评估的基本信息 | basic information for evaluation
     << 评估得出的搜索代价 | evaluation result of search cost
     """
-    s = 0
+    s = 9
     for i in range(9):
-        if task['value'][i] == task['goal'][i]:
-            s += 1
+        if task['now'][i] == task['end'][i]:
+            s -= 1
     return s
 
 
@@ -535,7 +537,7 @@ def manhattan_distance(task: dict) -> int:
     """
     s = 0
     for i in range(9):
-        now, goal = task['value'].index(i), task['goal'].index(i)
+        now, goal = task['now'].index(i), task['end'].index(i)
         s += abs(now // 3 - goal // 3) + abs(now % 3 - goal % 3)
     return s
 
@@ -546,12 +548,14 @@ def run_time(func: Callable) -> Callable:
 
     用于计算函数运行时间的装饰器 | decorator for calculating function running time
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
-        start = time()
+        start = clock()
         result = func(*args, **kwargs)
-        print('运行时间 | run time: {:.2f}s'.format(time() - start))
+        print('运行时间 | run time: {:.7f}s'.format(clock() - start))
         return result
+
     return wrapper
 
 
@@ -561,22 +565,24 @@ def run_time_5(func: Callable) -> Callable:
 
     重复运行 5 次并计算平均运行时间的装饰器 | decorator for repeating 5 times and calculating average running time
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         times = []
         for _ in range(1, 5):
-            start = time()
+            start = clock()
             func(*args, **kwargs)
-            times.append(time() - start)
-        start = time()
+            times.append(clock() - start)
+        start = clock()
         result = func(*args, **kwargs)
-        times.append(time() - start)
-        print('-----------------------')
+        times.append(clock() - start)
+        print('--------------------------------')
         for i in range(1, 6):
-            print('  {}  |  {:.2f}s'.format(i, times[i - 1]))
-        print('-----------------------')
-        print('平均时间 | average time: {:.2f}s'.format(sum(times) / 5))
+            print('  {}  |  {:>16.7f}s'.format(i, times[i - 1]))
+        print('--------------------------------')
+        print('平均时间 | average time: {:.7f}s\n'.format(sum(times) / 5))
         return result
+
     return wrapper
 
 
@@ -586,7 +592,7 @@ dls = depth_limited_search
 dbfs = double_breadth_first_search
 ls = lowest_step
 mp = most_at_place
-md = manhattan_distance
+mhd = manhattan_distance
 rt = run_time
 rt5 = run_time_5
 
